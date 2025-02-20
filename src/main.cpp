@@ -10,7 +10,8 @@ int main(){
   VideoCapture video_capture(&shm);
   VideoStream video_stream(&shm);
 
-  std::thread capture_thread(&VideoCapture::write_data, &video_capture);
+  video_capture.init();
+  std::thread capture_thread(&VideoCapture::capture_data, &video_capture);
   std::thread stream_thread(&VideoStream::read_data, &video_stream);
 
   capture_thread.join();

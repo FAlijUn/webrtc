@@ -29,20 +29,20 @@ public:
 
   void read_data(){
     while(true){
-      std::unique_lock<std::mutex> lock(shm_->mtx);
+      std::unique_lock<std::mutex> lock(shm_->mtx_);
       
       // 等待新数据就绪
-      shm_->cv.wait(lock, [this]{ return shm_->data_ready; });
+      shm_->cv_.wait(lock, [this]{ return shm_->data_ready_; });
 
       // 读取数据
-      std::cout << "Read thread: shared_data = " << *shm_->shared_data << std::endl;
+      std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
 
       // 更新状态
-      shm_->data_ready = false;
-      shm_->data_processed = true;
+      shm_->data_ready_ = false;
+      shm_->data_processed_ = true;
 
       lock.unlock();
-      shm_->cv.notify_one();
+      shm_->cv_.notify_one();
     }
   }
 };
