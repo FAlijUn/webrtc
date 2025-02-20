@@ -185,7 +185,7 @@ public:
         memcpy(shm_->shared_data_, buffers_[buf.index].start, buf.bytesused);
         shm_->data_ready_ = true;
         shm_->data_processed_ = false;
-        std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
+        // std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
         lock.unlock();
         shm_->cv_.notify_one();
       } else {

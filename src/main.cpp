@@ -12,7 +12,7 @@ int main(){
 
   video_capture.init();
   std::thread capture_thread(&VideoCapture::capture_data, &video_capture);
-  std::thread stream_thread(&VideoStream::read_data, &video_stream);
+  std::thread stream_thread(&VideoStream::main, &video_stream);
 
   capture_thread.join();
   stream_thread.join();
