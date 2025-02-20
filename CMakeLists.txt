@@ -25,6 +25,7 @@ find_package(PkgConfig REQUIRED)
 
 
 include_directories(
+  include
   ${GST_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${RK_MPP_INCLUDE_DIRS}
@@ -45,7 +46,8 @@ add_executable(test
   # test/data_proccess_shm.cpp
   # test/webrtc_appsrc_shm.cpp
   # test/gstreamer_appsrc.cpp
-  test/gstreamer_appsrc_webertc.cpp
+  # test/gstreamer_appsrc_webertc.cpp
+  src/main.cpp
 )
 
 
