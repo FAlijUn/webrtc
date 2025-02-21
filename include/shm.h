@@ -18,6 +18,7 @@
 class SharedMemory {
 public:
   unsigned char shared_data_[WIDTH * HEIGHT * 2];
+  size_t data_size_ = 0;
   const char *shm_name_ = "video0_shm";
   std::mutex mtx_;
   std::condition_variable cv_;

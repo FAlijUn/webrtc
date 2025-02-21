@@ -15,6 +15,8 @@
 #include <sys/mman.h>
 #include <cstring>
 
+#include "shm.h"
+
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace websocket = beast::websocket;

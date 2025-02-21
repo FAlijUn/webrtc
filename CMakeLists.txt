@@ -18,9 +18,9 @@ find_package(Boost REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-# pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
-# set(RGA_INCLUDE_DIR "/usr/include")
-# set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
+pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+set(RGA_INCLUDE_DIR "/usr/include")
+set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
 
 
 
@@ -33,9 +33,9 @@ include_directories(
   # ${OpenCV_INCLUDE_DIRS}
 )
 
-add_executable(webrtc_stream
-  webrtc_stream.cpp
-)
+# add_executable(webrtc_stream
+#   webrtc_stream.cpp
+# )
 
 add_executable(test
   # test/available_devices.cpp
@@ -61,15 +61,15 @@ target_link_libraries(test
   jsoncpp
 )
 
-target_link_libraries(webrtc_stream
-  ${GST_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${RK_MPP_LIBRARIES}
-  ${RGA_LIBRARY}
-  # ${OpenCV_LIBS}
-  # nlohmann_json::nlohmann_json
-  jsoncpp
-)
+# target_link_libraries(webrtc_stream
+#   ${GST_LIBRARIES}
+#   ${Boost_LIBRARIES}
+#   ${RK_MPP_LIBRARIES}
+#   ${RGA_LIBRARY}
+#   # ${OpenCV_LIBS}
+#   # nlohmann_json::nlohmann_json
+#   jsoncpp
+# )
 
 # set_target_properties(test PROPERTIES
 #   CXX_STANDARD 14
