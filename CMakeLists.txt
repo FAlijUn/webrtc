@@ -18,9 +18,9 @@ find_package(Boost REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
-set(RGA_INCLUDE_DIR "/usr/include")
-set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
+# pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+# set(RGA_INCLUDE_DIR "/usr/include")
+# set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
 
 
 
@@ -47,6 +47,7 @@ add_executable(test
   # test/webrtc_appsrc_shm.cpp
   # test/gstreamer_appsrc.cpp
   # test/gstreamer_appsrc_webertc.cpp
+  # test/thread_test.cpp
   src/main.cpp
 )
 

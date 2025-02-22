@@ -62,7 +62,7 @@ public:
 
   bool open_device(){
     // 打开设备
-    fd_ = open("/dev/video1", O_RDWR);
+    fd_ = open("/dev/video0", O_RDWR);
     if(fd_ == -1){
       std::cerr << "Failed to open /dev/video0" << std::endl;
       return false;
@@ -76,8 +76,8 @@ public:
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     fmt.fmt.pix.width = WIDTH;
     fmt.fmt.pix.height = HEIGHT;
-    // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+    // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
     if(ioctl(fd_, VIDIOC_S_FMT, &fmt) == -1){
       std::cerr << "Failed to set format" << std::endl;
@@ -182,14 +182,18 @@ public:
 
       if (buf.bytesused <= WIDTH * HEIGHT * 2) {
         std::unique_lock<std::mutex> lock(shm_->mtx_);
-        shm_->cv_.wait(lock, [this]{ return shm_->data_processed_; });
+        shm_ ->ros_cv_.wait(lock, [this]{ return shm_->ros_data_processed_; });
+        shm_ ->gst_cv_.wait(lock, [this]{ return shm_->gst_data_processed_; });
         memcpy(shm_->shared_data_, buffers_[buf.index].start, buf.bytesused);
         shm_->data_size_ = buf.bytesused;
-        shm_->data_ready_ = true;
-        shm_->data_processed_ = false;
-        // std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
+        shm_->ros_data_ready_ = true;
+        shm_->gst_data_ready_ = true;
+        shm_->ros_data_processed_ = false;
+        shm_->gst_data_processed_ = false;
+        std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
         lock.unlock();
-        shm_->cv_.notify_one();
+        shm_->ros_cv_.notify_all();
+        shm_->gst_cv_.notify_all();
       } else {
         std::cerr << "Warning, buffer size beyond shm size" << std::endl;
         return;

@@ -8,7 +8,7 @@ int main(){
   }
 
   VideoCapture video_capture(&shm);
-  // VideoStream video_stream(&shm);
+  VideoStream video_stream(&shm);
   VideoROS video_ros(&shm);
 
   if(!video_capture.init()){
@@ -21,11 +21,11 @@ int main(){
   }
 
   std::thread capture_thread(&VideoCapture::capture_data, &video_capture);
-  // std::thread stream_thread(&VideoStream::main, &video_stream);
+  std::thread stream_thread(&VideoStream::main, &video_stream);
   std::thread ros_thread(&VideoROS::read_data, &video_ros);
 
   capture_thread.join();
-  // stream_thread.join();
+  stream_thread.join();
   ros_thread.join();
 
   shm.cleanup();
