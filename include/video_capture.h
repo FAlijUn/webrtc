@@ -76,8 +76,8 @@ public:
     fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     fmt.fmt.pix.width = WIDTH;
     fmt.fmt.pix.height = HEIGHT;
-    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+    // fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
     if(ioctl(fd_, VIDIOC_S_FMT, &fmt) == -1){
       std::cerr << "Failed to set format" << std::endl;
@@ -156,8 +156,8 @@ public:
   }
 
   void capture_data(){
+    std::cout << "Capture thread started" << std::endl;
     while(true){
-
       struct v4l2_buffer buf;
       memset(&buf, 0, sizeof(buf));
       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;

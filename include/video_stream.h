@@ -39,6 +39,8 @@ public:
     // 创建GStreamer管道
     GstElement* pipeline_ = gst_pipeline_new("pipeline");
     appsrc_ = gst_element_factory_make("appsrc", "appsrc");
+    GstElement *jpeg_dec = gst_element_factory_make("jpegdec", "jpeg_dec");
+    GstElement *queue = gst_element_factory_make("queue", "queue");
     GstElement *videoconvert = gst_element_factory_make("videoconvert", "convert");
     GstElement *sink = gst_element_factory_make("autovideosink", "sink");
 
@@ -50,6 +52,14 @@ public:
       g_printerr("Appsrc element could not be created.\n");
       return;
     }
+    if(!jpeg_dec){
+      g_printerr("Jpegdec element could not be created.\n");
+      return;
+    }
+    if(!queue){
+      g_printerr("Queue element could not be created.\n");
+      return;
+    }
     if(!videoconvert){
       g_printerr("Videoconvert element could not be created.\n");
       return;
@@ -59,21 +69,26 @@ public:
       return;
     }
 
-    gst_bin_add_many(GST_BIN(pipeline_), appsrc_, videoconvert, sink, NULL);
-    if(!gst_element_link_many(appsrc_, videoconvert, sink, NULL)){
+    gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue, videoconvert, sink, NULL);
+    if(!gst_element_link_many(appsrc_, jpeg_dec, queue, videoconvert, sink, NULL)){
       g_printerr("Elements could not be linked.\n");
       gst_object_unref(pipeline_);
       return;
     }
 
     // 设置caps格式为YUY2
-    GstCaps* caps = gst_caps_new_simple("video/x-raw",
-                                        "format", G_TYPE_STRING, "YUY2",
+    // GstCaps* caps = gst_caps_new_simple("video/x-raw",
+    //                                     "format", G_TYPE_STRING, "MJPEG",
+    //                                     "width", G_TYPE_INT, WIDTH,
+    //                                     "height", G_TYPE_INT, HEIGHT,
+    //                                     "framerate", GST_TYPE_FRACTION, 30, 1,
+    //                                     nullptr);
+    GstCaps* caps = gst_caps_new_simple("image/jpeg",
                                         "width", G_TYPE_INT, WIDTH,
                                         "height", G_TYPE_INT, HEIGHT,
                                         "framerate", GST_TYPE_FRACTION, 30, 1,
                                         nullptr);
-    g_object_set(appsrc_, "caps", caps, "do-timestamp", TRUE, nullptr);
+    g_object_set(appsrc_, "caps", caps, "format", GST_FORMAT_TIME, nullptr);
     gst_caps_unref(caps);
 
     // 启动流水线

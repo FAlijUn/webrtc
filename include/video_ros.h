@@ -21,6 +21,7 @@ public:
   }
 
   void read_data(){
+    std::cout << "Read thread started" << std::endl;
     while(true){
       std::unique_lock<std::mutex> lock(shm_->mtx_);
       
