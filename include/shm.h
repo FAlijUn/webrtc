@@ -9,7 +9,8 @@
 #include <sys/types.h>
 #include <chrono>
 #include <mutex>
-#include <condition_variable>  // 添加条件变量
+#include <shared_mutex>
+// #include <condition_variable>  // 添加条件变量
 #include <atomic>  
 
 #define WIDTH 640
@@ -21,13 +22,11 @@ public:
   unsigned char shared_data_[WIDTH * HEIGHT * 2];
   size_t data_size_ = 0;
   const char *shm_name_ = "video0_shm";
-  std::mutex mtx_;
-  std::condition_variable ros_cv_;
-  std::condition_variable gst_cv_;
-  bool ros_data_ready_ = false;
-  bool gst_data_ready_ = false;
-  bool ros_data_processed_ = true;
-  bool gst_data_processed_ = true;
+  std::shared_mutex mtx_;
+  // std::condition_variable ros_cv_;
+  // std::condition_variable gst_cv_;
+  // bool ros_data_ready_ = false;
+  // bool gst_data_ready_ = false;
   SharedMemory() {}
 
   bool init(){

@@ -23,10 +23,11 @@ public:
   void read_data(){
     std::cout << "Read thread started" << std::endl;
     while(true){
-      std::unique_lock<std::mutex> lock(shm_->mtx_);
+      // std::unique_lock<std::mutex> lock(shm_->mtx_);
+      std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
       
       // 等待新数据就绪
-      shm_->ros_cv_.wait(lock, [this]{ return shm_->ros_data_ready_; });
+      // shm_->ros_cv_.wait(lock, [this]{ return shm_->ros_data_ready_; });
 
       // 读取数据
       std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
@@ -38,11 +39,11 @@ public:
       // shm_->data_ready_ = false;
       // shm_->ros_data_processed_ = true;
       
-      shm_->ros_data_ready_ = false;
-      shm_->ros_data_processed_ = true;
+      // shm_->ros_data_ready_ = false;
+      // shm_->ros_data_processed_ = true;
 
-      lock.unlock();
-      shm_->ros_cv_.notify_all();
+      // lock.unlock();
+      // shm_->ros_cv_.notify_all();
     }
   }
 };

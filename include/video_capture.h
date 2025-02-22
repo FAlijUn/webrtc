@@ -181,19 +181,19 @@ public:
       }
 
       if (buf.bytesused <= WIDTH * HEIGHT * 2) {
-        std::unique_lock<std::mutex> lock(shm_->mtx_);
-        shm_ ->ros_cv_.wait(lock, [this]{ return shm_->ros_data_processed_; });
-        shm_ ->gst_cv_.wait(lock, [this]{ return shm_->gst_data_processed_; });
+        std::unique_lock<std::shared_mutex> lock(shm_->mtx_);
+        // shm_ ->ros_cv_.wait(lock, [this]{ return shm_->ros_data_processed_; });
+        // shm_ ->gst_cv_.wait(lock, [this]{ return shm_->gst_data_processed_; });
         memcpy(shm_->shared_data_, buffers_[buf.index].start, buf.bytesused);
         shm_->data_size_ = buf.bytesused;
-        shm_->ros_data_ready_ = true;
-        shm_->gst_data_ready_ = true;
-        shm_->ros_data_processed_ = false;
-        shm_->gst_data_processed_ = false;
+        // shm_->ros_data_ready_ = true;
+        // shm_->gst_data_ready_ = true;
+        // shm_->ros_data_processed_ = false;
+        // shm_->gst_data_processed_ = false;
         std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
         lock.unlock();
-        shm_->ros_cv_.notify_all();
-        shm_->gst_cv_.notify_all();
+        // shm_->ros_cv_.notify_all();
+        // shm_->gst_cv_.notify_all();
       } else {
         std::cerr << "Warning, buffer size beyond shm size" << std::endl;
         return;

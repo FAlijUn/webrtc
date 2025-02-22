@@ -259,9 +259,10 @@ public:
   void capture_frames(){
     std::cout << "capture_frame" << std::endl;
     while(true){
-      std::unique_lock<std::mutex> lock(shm_->mtx_);
+      // std::unique_lock<std::mutex> lock(shm_->mtx_);
+      std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
       // 等待新数据就绪
-      shm_ -> gst_cv_.wait(lock, [this]{ return shm_->gst_data_ready_; });
+      // shm_ -> gst_cv_.wait(lock, [this]{ return shm_->gst_data_ready_; });
       // 读取数据
       // std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
       GstBuffer* gst_buffer = gst_buffer_new_wrapped_full(
@@ -280,10 +281,10 @@ public:
         std::cerr << "Failed to push buffer: " << ret << std::endl;
       }
       // 更新状态
-      shm_->gst_data_ready_ = false;
-      shm_->gst_data_processed_ = true;
-      lock.unlock();
-      shm_->gst_cv_.notify_all();
+      // shm_->gst_data_ready_ = false;
+      // shm_->gst_data_processed_ = true;
+      // lock.unlock();
+      // shm_->gst_cv_.notify_all();
     }
   }
 
