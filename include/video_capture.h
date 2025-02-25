@@ -62,7 +62,7 @@ public:
 
   bool open_device(){
     // 打开设备
-    fd_ = open("/dev/video0", O_RDWR);
+    fd_ = open("/dev/video1", O_RDWR);
     if(fd_ == -1){
       std::cerr << "Failed to open /dev/video0" << std::endl;
       return false;
@@ -190,7 +190,7 @@ public:
         // shm_->gst_data_ready_ = true;
         // shm_->ros_data_processed_ = false;
         // shm_->gst_data_processed_ = false;
-        std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
+        // std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
         lock.unlock();
         // shm_->ros_cv_.notify_all();
         // shm_->gst_cv_.notify_all();

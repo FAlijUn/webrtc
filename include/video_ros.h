@@ -24,14 +24,17 @@ public:
     std::cout << "Read thread started" << std::endl;
     while(true){
       // std::unique_lock<std::mutex> lock(shm_->mtx_);
-      std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
-      
-      // 等待新数据就绪
-      // shm_->ros_cv_.wait(lock, [this]{ return shm_->ros_data_ready_; });
+      {
+        std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
+        
+        // 等待新数据就绪
+        // shm_->ros_cv_.wait(lock, [this]{ return shm_->ros_data_ready_; });
 
-      // 读取数据
-      std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
-      std::cout << "Read thread: data_size = " << shm_->data_size_ << std::endl;
+        // 读取数据
+        // std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
+        // std::cout << "Read thread: data_size = " << shm_->data_size_ << std::endl;
+      }
+      usleep(33333);
       // uint8_t* yuv_data = new uint8_t[WIDTH * HEIGHT];
       // mjpeg2yuv_->decode(shm_->shared_data_, shm_->data_size_, yuv_data);
 

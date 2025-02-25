@@ -170,7 +170,7 @@ void handle_websocket_session(tcp::socket socket)
     }
 
     GstPad *rtp_src_pad = gst_element_get_static_pad(rtpvp8pay, "src");
-    GstPad *webrtc_sink_pad = gst_element_get_request_pad(webrtcbin, "sink_%u");
+    GstPad *webrtc_sink_pad = gst_element_request_pad_simple(webrtcbin, "sink_%u");
     gst_pad_link(rtp_src_pad, webrtc_sink_pad);
     gst_object_unref(rtp_src_pad);
     gst_object_unref(webrtc_sink_pad);

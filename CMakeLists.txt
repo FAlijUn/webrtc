@@ -49,6 +49,7 @@ add_executable(test
   # test/gstreamer_appsrc_webertc.cpp
   # test/thread_test.cpp
   src/main.cpp
+  # webrtc_stream.cpp
 )
 
 

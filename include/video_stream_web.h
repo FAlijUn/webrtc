@@ -84,11 +84,15 @@ public:
       GstElement* pipeline_ = gst_pipeline_new("pipeline");
       appsrc_ = gst_element_factory_make("appsrc", "appsrc");
       GstElement *jpeg_dec = gst_element_factory_make("jpegdec", "jpeg_dec");
-      GstElement *queue = gst_element_factory_make("queue", "queue");
+      GstElement *queue1 = gst_element_factory_make("queue", "queue");
       GstElement *videoconvert = gst_element_factory_make("videoconvert", "convert");
       GstElement *capsfilter = gst_element_factory_make("capsfilter", "capsfilter");
-      GstElement *vp8enc = gst_element_factory_make("vp8enc", "encoder");
-      GstElement *rtpvp8pay = gst_element_factory_make("rtpvp8pay", "pay");
+      GstElement *enc = gst_element_factory_make("vp8enc", "encoder");
+      GstElement *rtppay = gst_element_factory_make("rtpvp8pay", "pay");
+      // GstElement *enc = gst_element_factory_make("mpph264enc", "encoder");
+      // GstElement *queue2 = gst_element_factory_make("queue", "queue");
+      // GstElement *parse = gst_element_factory_make("h264parse", "parse");
+      // GstElement *rtppay = gst_element_factory_make("rtph264pay", "pay");
       webrtcbin_ = gst_element_factory_make("webrtcbin", "sendrecv");
       // GstElement *sink = gst_element_factory_make("autovideosink", "sink");
 
@@ -104,8 +108,8 @@ public:
         g_printerr("Jpegdec element could not be created.\n");
         return;
       }
-      if(!queue){
-        g_printerr("Queue element could not be created.\n");
+      if(!queue1){
+        g_printerr("Queue1 element could not be created.\n");
         return;
       }
       if(!videoconvert){
@@ -116,12 +120,20 @@ public:
         g_printerr("Caps filter element could not be created.\n");
         return;
       }
-      if(!vp8enc){
-        g_printerr("VP8 encoder element could not be created.\n");
-        return;
-      }
-      if(!rtpvp8pay){
-        g_printerr("RTP VP8 pay element could not be created.\n");
+      // if(!enc){
+      //   g_printerr("Encoder element could not be created.\n");
+      //   return;
+      // }
+      // if(!queue2){
+      //   g_printerr("Queue2 element could not be created.\n");
+      //   return;
+      // }
+      // if(!parse){
+      //   g_printerr("Parse element could not be created.\n");
+      //   return;
+      // }
+      if(!rtppay){
+        g_printerr("RTP  pay element could not be created.\n");
         return;
       }
       if(!webrtcbin_){
@@ -135,44 +147,40 @@ public:
         "framerate", GST_TYPE_FRACTION, 30, 1,
         nullptr);
       g_object_set(appsrc_, "caps", appsrc_caps, "is-live", TRUE, "format", GST_FORMAT_TIME, nullptr);
+      // g_object_set(jpeg_dec, "format", 2, nullptr);
       gst_caps_unref(appsrc_caps);
 
       GstCaps *video_caps = gst_caps_new_simple("video/x-raw",
         "format", G_TYPE_STRING, "I420",
         "width", G_TYPE_INT, WIDTH,
         "height", G_TYPE_INT, HEIGHT,
+        "framerate", GST_TYPE_FRACTION, 30, 1,
         NULL);
       
       g_object_set(capsfilter, "caps", video_caps, NULL);
       gst_caps_unref(video_caps);
 
       g_object_set(webrtcbin_, "stun-server", "stun://stun.l.google.com:19302", NULL);
-      g_object_set(vp8enc, "deadline", 1, NULL);
+      g_object_set(enc, "deadline", 1, NULL);
       // g_object_set(sink, "sync", FALSE, NULL);
 
-      gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue, videoconvert, capsfilter, vp8enc, rtpvp8pay, webrtcbin_, NULL);
-      if(!gst_element_link_many(appsrc_, jpeg_dec, queue, videoconvert, capsfilter, vp8enc, rtpvp8pay, NULL)){
+      // gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, queue2, parse, rtppay, webrtcbin_, NULL);
+      gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc ,rtppay, webrtcbin_, NULL);
+      // if(!gst_element_link_many(appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, parse, rtppay, NULL)){
+      if(!gst_element_link_many(appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, rtppay, NULL)){
         g_printerr("Elements could not be linked.\n");
         gst_object_unref(pipeline_);
         return;
       }
 
-      GstPad *rtp_src_pad = gst_element_get_static_pad(rtpvp8pay, "src");
-      GstPad *webrtc_sink_pad = gst_element_get_request_pad(webrtcbin_, "sink_%u");
+      GstPad *rtp_src_pad = gst_element_get_static_pad(rtppay, "src");
+      GstPad *webrtc_sink_pad = gst_element_request_pad_simple(webrtcbin_, "sink_%u");
       gst_pad_link(rtp_src_pad, webrtc_sink_pad);
       gst_object_unref(rtp_src_pad);
       gst_object_unref(webrtc_sink_pad);
 
       g_signal_connect(webrtcbin_, "on-negotiation-needed", G_CALLBACK(on_negotiation_needed), &ws);
       g_signal_connect(webrtcbin_, "on-ice-candidate", G_CALLBACK(on_ice_candidate), &ws);
-
-      // 设置caps格式为YUY2
-      // GstCaps* caps = gst_caps_new_simple("video/x-raw",
-      //                                     "format", G_TYPE_STRING, "MJPEG",
-      //                                     "width", G_TYPE_INT, WIDTH,
-      //                                     "height", G_TYPE_INT, HEIGHT,
-      //                                     "framerate", GST_TYPE_FRACTION, 30, 1,
-      //                                     nullptr);
 
       GstStateChangeReturn ret;
       // 启动流水线
@@ -205,7 +213,7 @@ public:
         std::string type = obj["type"].asString();
         if (type == "offer")
         {
-          std::cout << "Received offer: " << text << std::endl;
+          // std::cout << "Received offer: " << text << std::endl;
 
           std::string sdp = obj["sdp"].asString();
 
@@ -220,7 +228,7 @@ public:
         }
         else if (type == "candidate")
         {
-          std::cout << "Received ICE candidate: " << text << std::endl;
+          // std::cout << "Received ICE candidate: " << text << std::endl;
           
           Json::Value ice = obj["ice"];
           std::string candidate = ice["candidate"].asString();
@@ -254,32 +262,34 @@ public:
     return nullptr;
   }
 
-
-
   void capture_frames(){
-    std::cout << "capture_frame" << std::endl;
+    // std::cout << "capture_frame" << std::endl;
     while(true){
-      // std::unique_lock<std::mutex> lock(shm_->mtx_);
-      std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
-      // 等待新数据就绪
-      // shm_ -> gst_cv_.wait(lock, [this]{ return shm_->gst_data_ready_; });
-      // 读取数据
-      // std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
-      GstBuffer* gst_buffer = gst_buffer_new_wrapped_full(
-        GST_MEMORY_FLAG_READONLY,
-        shm_->shared_data_,
-        WIDTH * HEIGHT * 2,
-        0,
-        WIDTH * HEIGHT * 2,
-        nullptr,
-        nullptr
-      );
-      GstFlowReturn ret;
-      g_signal_emit_by_name(appsrc_, "push-buffer", gst_buffer, &ret);
-      gst_buffer_unref(gst_buffer);
-      if(ret != GST_FLOW_OK){
-        std::cerr << "Failed to push buffer: " << ret << std::endl;
+      // std::cout << "capture_frame" << std::endl;
+      {
+        std::shared_lock<std::shared_mutex> lock(shm_->mtx_);
+        // 等待新数据就绪
+        // shm_ -> gst_cv_.wait(lock, [this]{ return shm_->gst_data_ready_; });
+        // 读取数据
+        // std::cout << "Read thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
+        GstBuffer* gst_buffer = gst_buffer_new_wrapped_full(
+          GST_MEMORY_FLAG_READONLY,
+          shm_->shared_data_,
+          WIDTH * HEIGHT * 2,
+          0,
+          WIDTH * HEIGHT * 2,
+          nullptr,
+          nullptr
+        );
+        GstFlowReturn ret;
+        g_signal_emit_by_name(appsrc_, "push-buffer", gst_buffer, &ret);
+        gst_buffer_unref(gst_buffer);
+        
+        if(ret != GST_FLOW_OK){
+          std::cerr << "Failed to push buffer: " << ret << std::endl;
+        }
       }
+      usleep(33333);
       // 更新状态
       // shm_->gst_data_ready_ = false;
       // shm_->gst_data_processed_ = true;
@@ -330,7 +340,7 @@ GstElement *VideoStreamWeb::webrtcbin_ = nullptr;
 
 void VideoStreamWeb::send_ice_candidate_message(websocket::stream<tcp::socket>& ws, guint mlineindex, gchar *candidate)
   {
-    std::cout << "Sending ICE candidate: mlineindex=" << mlineindex << ", candidate=" << candidate << std::endl;
+    // std::cout << "Sending ICE candidate: mlineindex=" << mlineindex << ", candidate=" << candidate << std::endl;
 
     Json::Value ice_json;
     ice_json["candidate"] = candidate;
@@ -344,7 +354,7 @@ void VideoStreamWeb::send_ice_candidate_message(websocket::stream<tcp::socket>& 
     std::string text = Json::writeString(writer, msg_json);
     ws.write(net::buffer(text));
 
-    std::cout << "ICE candidate sent" << std::endl;
+    // std::cout << "ICE candidate sent" << std::endl;
   }
 
   void VideoStreamWeb::on_answer_created(GstPromise *promise, gpointer user_data)
@@ -365,7 +375,7 @@ void VideoStreamWeb::send_ice_candidate_message(websocket::stream<tcp::socket>& 
     std::string text = Json::writeString(writer, sdp_json);
     ws->write(net::buffer(text));
 
-    std::cout << "Local description set and answer sent: " << text << std::endl;
+    std::cout << "Local description set and answer sent" << std::endl;
 
     gst_webrtc_session_description_free(answer);
   }
@@ -387,7 +397,7 @@ void VideoStreamWeb::send_ice_candidate_message(websocket::stream<tcp::socket>& 
 
   void VideoStreamWeb::on_ice_candidate(GstElement *webrtc, guint mlineindex, gchar *candidate, gpointer user_data)
   {
-    std::cout << "ICE candidate generated: mlineindex=" << mlineindex << ", candidate=" << candidate << std::endl;
+    // std::cout << "ICE candidate generated: mlineindex=" << mlineindex << ", candidate=" << candidate << std::endl;
 
     websocket::stream<tcp::socket>* ws = static_cast<websocket::stream<tcp::socket>*>(user_data);
     send_ice_candidate_message(*ws, mlineindex, candidate);

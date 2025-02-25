@@ -7,7 +7,7 @@
   <video id="video" autoplay playsinline muted></video>
   <script>
     const video = document.getElementById('video');
-    const signaling = new WebSocket('ws://127.0.0.1:8000/ws');
+    const signaling = new WebSocket('ws://129.68.11.4:8000/ws');
     let pc = new RTCPeerConnection({
       iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
     });
