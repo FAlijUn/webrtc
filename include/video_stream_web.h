@@ -83,11 +83,13 @@ public:
       // 创建GStreamer管道
       GstElement* pipeline_ = gst_pipeline_new("pipeline");
       appsrc_ = gst_element_factory_make("appsrc", "appsrc");
+      GstElement *jpeg_parse = gst_element_factory_make("jpegparse", "jpegparse");
+      GstElement *queue1 = gst_element_factory_make("queue", "queue1");
       GstElement *jpeg_dec = gst_element_factory_make("jpegdec", "jpeg_dec");
-      GstElement *queue1 = gst_element_factory_make("queue", "queue");
+      GstElement *queue2 = gst_element_factory_make("queue", "queue2");
       GstElement *videoconvert = gst_element_factory_make("videoconvert", "convert");
       GstElement *capsfilter = gst_element_factory_make("capsfilter", "capsfilter");
-      GstElement *enc = gst_element_factory_make("vp8enc", "encoder");
+      GstElement *enc = gst_element_factory_make("mppvp8enc", "encoder");
       GstElement *rtppay = gst_element_factory_make("rtpvp8pay", "pay");
       // GstElement *enc = gst_element_factory_make("mpph264enc", "encoder");
       // GstElement *queue2 = gst_element_factory_make("queue", "queue");
@@ -104,11 +106,19 @@ public:
         g_printerr("Appsrc element could not be created.\n");
         return;
       }
+      if(!jpeg_parse){
+        g_printerr("Jpegparse element could not be created.\n");
+        return;
+      }
+      if(!queue1){
+        g_printerr("Queue1 element could not be created.\n");
+        return;
+      }
       if(!jpeg_dec){
         g_printerr("Jpegdec element could not be created.\n");
         return;
       }
-      if(!queue1){
+      if(!queue2){
         g_printerr("Queue1 element could not be created.\n");
         return;
       }
@@ -144,30 +154,30 @@ public:
       GstCaps* appsrc_caps = gst_caps_new_simple("image/jpeg",
         "width", G_TYPE_INT, WIDTH,
         "height", G_TYPE_INT, HEIGHT,
-        "framerate", GST_TYPE_FRACTION, 30, 1,
         nullptr);
-      g_object_set(appsrc_, "caps", appsrc_caps, "is-live", TRUE, "format", GST_FORMAT_TIME, nullptr);
-      // g_object_set(jpeg_dec, "format", 2, nullptr);
+      g_object_set(appsrc_, "caps", appsrc_caps, "is-live", TRUE, "format", GST_FORMAT_TIME,"max-buffers", 200, nullptr);
       gst_caps_unref(appsrc_caps);
+      // g_object_set(jpeg_dec, "dma-feature", TRUE , nullptr);
 
       GstCaps *video_caps = gst_caps_new_simple("video/x-raw",
         "format", G_TYPE_STRING, "I420",
         "width", G_TYPE_INT, WIDTH,
         "height", G_TYPE_INT, HEIGHT,
-        "framerate", GST_TYPE_FRACTION, 30, 1,
+        // "framerate", GST_TYPE_FRACTION, 30, 1,
         NULL);
       
       g_object_set(capsfilter, "caps", video_caps, NULL);
       gst_caps_unref(video_caps);
 
       g_object_set(webrtcbin_, "stun-server", "stun://stun.l.google.com:19302", NULL);
-      g_object_set(enc, "deadline", 1, NULL);
+      // g_object_set(enc, "deadline", 1, NULL);
       // g_object_set(sink, "sync", FALSE, NULL);
 
       // gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, queue2, parse, rtppay, webrtcbin_, NULL);
-      gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc ,rtppay, webrtcbin_, NULL);
+      // gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_parse, queue1, jpeg_dec, queue2, videoconvert, capsfilter, enc ,rtppay, webrtcbin_, NULL);
+      gst_bin_add_many(GST_BIN(pipeline_), appsrc_, jpeg_dec, queue2, videoconvert, capsfilter, enc ,rtppay, webrtcbin_, NULL);
       // if(!gst_element_link_many(appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, parse, rtppay, NULL)){
-      if(!gst_element_link_many(appsrc_, jpeg_dec, queue1, videoconvert, capsfilter, enc, rtppay, NULL)){
+      if(!gst_element_link_many(appsrc_, jpeg_dec, queue2, videoconvert, capsfilter, enc, rtppay, NULL)){
         g_printerr("Elements could not be linked.\n");
         gst_object_unref(pipeline_);
         return;
@@ -290,6 +300,7 @@ public:
         }
       }
       usleep(33333);
+      // usleep(1000000);
       // 更新状态
       // shm_->gst_data_ready_ = false;
       // shm_->gst_data_processed_ = true;
