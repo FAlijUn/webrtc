@@ -37,7 +37,7 @@ include_directories(
 #   webrtc_stream.cpp
 # )
 
-add_executable(test
+add_executable(main
   # test/available_devices.cpp
   # test/save_to_shm.cpp
   # test/multi_thread_shm.cpp
@@ -53,7 +53,7 @@ add_executable(test
 )
 
 
-target_link_libraries(test
+target_link_libraries(main
   ${GST_LIBRARIES}
   ${Boost_LIBRARIES}
   ${RK_MPP_LIBRARIES}
@@ -62,6 +62,16 @@ target_link_libraries(test
   # nlohmann_json::nlohmann_json
   jsoncpp
 )
+
+add_executable(server
+  src/server.cpp
+)
+
+target_link_libraries(server
+  ${Boost_LIBRARIES}
+  jsoncpp
+)
+
 
 # target_link_libraries(webrtc_stream
 #   ${GST_LIBRARIES}
@@ -77,7 +87,3 @@ target_link_libraries(test
 #   CXX_STANDARD 14
 #   CXX_STANDARD_REQUIRED ON
 # )
-
-link_directories(
-  ${GST_LIBRARY_DIRS}
-)
