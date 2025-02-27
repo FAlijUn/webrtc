@@ -1,14 +1,13 @@
 #include "signaling_server.h"
 
-
-int main() {
-  try {
-    asio::io_context io_context;
-    SignalingServer server(io_context, 8000); // WebSocket 监听端口 8000
+int main(){
+  try{
+    asio::io_context ioc;
+    SignalingServer server(ioc);
     server.run();
-    io_context.run();
-  } catch (const std::exception& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+    ioc.run();
+  }catch(std::exception& e){
+    std::cerr << "Exception: " << e.what() << std::endl;
   }
   return 0;
 }

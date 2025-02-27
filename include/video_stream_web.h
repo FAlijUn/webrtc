@@ -81,7 +81,7 @@ public:
       ws.accept();
 
       // 创建GStreamer管道
-      GstElement* pipeline_ = gst_pipeline_new("pipeline");
+      pipeline_ = gst_pipeline_new("pipeline");
       appsrc_ = gst_element_factory_make("appsrc", "appsrc");
       GstElement *jpeg_parse = gst_element_factory_make("jpegparse", "jpegparse");
       GstElement *queue1 = gst_element_factory_make("queue", "queue1");

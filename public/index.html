@@ -7,15 +7,15 @@
   <video id="video" autoplay playsinline muted></video>
   <script>
     const video = document.getElementById('video');
-    const signaling = new WebSocket('ws://129.68.11.4:8000/ws');
+    const signaling = new WebSocket('ws://129.68.11.4:8000');
     let pc = new RTCPeerConnection({
       iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
     });
 
-    // signaling.onopen = () => {
-    //   console.log('WebSocket connected');
-    //   start();  // 确保 WebSocket 连接后才开始发送 offer
-    // };
+      signaling.onopen = () => {
+        console.log('WebSocket connected');
+        start();  // 确保 WebSocket 连接后才开始发送 offer
+      };
 
     signaling.onmessage = async (event) => {
       const data = JSON.parse(event.data);
