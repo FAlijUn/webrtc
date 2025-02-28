@@ -1,6 +1,10 @@
+#include <rclcpp/rclcpp.hpp>
 #include "api.h"
 
-int main(){
+int main(int argc, char** argv) {
+  rclcpp::init(argc, argv);
+  auto node = rclcpp::Node::make_shared("video_ros_node");
+
   SharedMemory shm;
   if(!shm.init()){
     std::cerr << "Failed to create shared memory" << std::endl;
@@ -14,7 +18,7 @@ int main(){
   std::string port = "8001";
   VideoStream video_stream(&shm, host, port);
   // VideoStreamWeb video_stream_web(&shm);
-  VideoROS video_ros(&shm);
+  VideoROS video_ros(&shm, node);
 
   if(!video_capture.init()){
     std::cerr << "Failed to initialize video capture" << std::endl;
@@ -29,13 +33,27 @@ int main(){
   std::thread capture_thread(&VideoCapture::capture_data, &video_capture);
   // std::thread stream_thread(&VideoStream::main, &video_stream);
   std::thread ros_thread(&VideoROS::read_data, &video_ros);
-  // video_stream_web.init();
   video_stream.init();
   
-  capture_thread.join();
-  // stream_thread.join();
-  ros_thread.join();
 
-  shm.cleanup();
+  rclcpp::on_shutdown([&](){
+    video_capture.stop();
+    video_stream.stop();
+    video_ros.stop();
+    capture_thread.join();
+    ros_thread.join();
+    shm.cleanup();
+  });
+
+
+  // rclcpp::spin(node);
+  // // video_stream_web.init();
+ 
+  // capture_thread.join();
+  // // stream_thread.join();
+  // ros_thread.join();
+
+  rclcpp::spin(node);
+  rclcpp::shutdown();
   return 0;
 }

@@ -48,6 +48,11 @@ public:
     g_main_loop_run(loop_);
   }
 
+  void stop(){
+    is_exit_.store(true);
+    running_.store(false);
+  }
+
   ~VideoStream(){
     is_exit_.store(true);
     running_.store(false);

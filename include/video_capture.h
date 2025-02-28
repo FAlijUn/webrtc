@@ -10,6 +10,7 @@
 #include <sys/shm.h>
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 #include "shm.h"
 
@@ -19,10 +20,6 @@ struct buffer{
 };
 
 class VideoCapture {
-private:
-  SharedMemory *shm_;
-  int fd_;
-  struct buffer buffers_[4];
 public:
   VideoCapture(SharedMemory *shm): shm_(shm) {}
 
@@ -157,7 +154,7 @@ public:
 
   void capture_data(){
     std::cout << "Capture thread started" << std::endl;
-    while(true){
+    while(!is_exit_.load()){
       struct v4l2_buffer buf;
       memset(&buf, 0, sizeof(buf));
       buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -186,14 +183,7 @@ public:
         // shm_ ->gst_cv_.wait(lock, [this]{ return shm_->gst_data_processed_; });
         memcpy(shm_->shared_data_, buffers_[buf.index].start, buf.bytesused);
         shm_->data_size_ = buf.bytesused;
-        // shm_->ros_data_ready_ = true;
-        // shm_->gst_data_ready_ = true;
-        // shm_->ros_data_processed_ = false;
-        // shm_->gst_data_processed_ = false;
-        // std::cout << "Capture thread: shared_data = " << (int)shm_->shared_data_[0] << std::endl;
-        lock.unlock();
-        // shm_->ros_cv_.notify_all();
-        // shm_->gst_cv_.notify_all();
+        // std::cout << buf.bytesused << std::endl;
       } else {
         std::cerr << "Warning, buffer size beyond shm size" << std::endl;
         return;
@@ -205,6 +195,10 @@ public:
         return;
       }
     }
+  }
+  
+  void stop(){
+    is_exit_.store(true);
   }
   
   ~VideoCapture(){
@@ -222,4 +216,10 @@ public:
     }
     close(fd_);
   }
+
+private:
+  SharedMemory *shm_;
+  int fd_;
+  struct buffer buffers_[4];
+  std::atomic<bool> is_exit_{false};
 };

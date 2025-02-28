@@ -10,7 +10,7 @@
 #include <rockchip/rk_type.h>
 #include <rga/RgaApi.h>
 #include <rga/RockchipRga.h> 
-
+#include <libyuv.h>
 #define MPP_ALIGN(x, a) (((x) + (a)-1) & ~((a)-1))
 
 class MjpegToYuvConverter{
@@ -84,9 +84,6 @@ public:
     }
     mpp_packet_init_with_buffer(&mpp_packet_, mpp_packet_buffer_);
     data_buffer_ = (uint8_t *)mpp_buffer_get_ptr(mpp_packet_buffer_);
-    
-    rga_ = new RockchipRga();
-    rga_->RkRgaInit();
     return true;
   }
 
@@ -160,7 +157,7 @@ public:
           return false;
         }
         // std::cout << (int) rgb_buffer_[0] << " " << (int) rgb_buffer_[1] << " " << (int) rgb_buffer_[2] << std::endl;
-
+        memcpy(yuv_buffer, rgb_buffer_, width * height * 3);
         if(mpp_frame_get_eos(output_frame)){
           std::cout << "mpp_frame_get_eos" << std::endl;
         }
@@ -178,10 +175,18 @@ public:
   bool mppFrame2RGB(const MppFrame frame, uint8_t *data) {
     int width = mpp_frame_get_width(frame);
     int height = mpp_frame_get_height(frame);
-    std::cout << "width: " << width << " height: " << height << std::endl;
-    // MppBuffer buffer = mpp_frame_get_buffer(frame);
-    // memset(data, 0, width * height * 3);
-    // uint8_t* buffer_ptr = (uint8_t *)mpp_buffer_get_ptr(buffer);
+    MppBuffer buffer = mpp_frame_get_buffer(frame);
+    memset(data, 0, width * height * 3);
+    uint8_t* buffer_ptr = (uint8_t *)mpp_buffer_get_ptr(buffer);
+    auto *y = (const uint8_t *)buffer_ptr;
+    auto *uv = y + width * height;
+    int ret =
+        libyuv::NV12ToRGB24(y, width, uv, width, data, width * 3, width, height);
+    if (ret) {
+      std::cout << "change to rgb failed" << std::endl;
+      return false;
+    }
+    return true;
 
     // rga_info_t src_info;
     // rga_info_t dst_info;

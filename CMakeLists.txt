@@ -9,18 +9,21 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-app-1.0)
 find_package(Boost REQUIRED)
-# find_package(opencv REQUIRED)
-# find_package(nlohmann_json REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-# pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
 # set(RGA_INCLUDE_DIR "/usr/include")
 # set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
+
+set(YUV_INCLUDE_DIR "/usr/include")
+set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
 
 
 
@@ -29,13 +32,10 @@ include_directories(
   ${GST_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${RK_MPP_INCLUDE_DIRS}
-  ${RGA_INCLUDE_DIR}
-  # ${OpenCV_INCLUDE_DIRS}
+  ${YUV_INCLUDE_DIR}
+  # ${RGA_INCLUDE_DIR}
 )
 
-# add_executable(webrtc_stream
-#   webrtc_stream.cpp
-# )
 
 add_executable(main
   # test/available_devices.cpp
@@ -52,16 +52,23 @@ add_executable(main
   # webrtc_stream.cpp
 )
 
+ament_target_dependencies(main
+  rclcpp
+  sensor_msgs
+)
 
 target_link_libraries(main
   ${GST_LIBRARIES}
   ${Boost_LIBRARIES}
   ${RK_MPP_LIBRARIES}
-  ${RGA_LIBRARY}
-  # ${OpenCV_LIBS}
-  # nlohmann_json::nlohmann_json
+  ${YUV_LIBRARY}
+  # ${RGA_LIBRARY}
   jsoncpp
 )
+
+install(TARGETS
+  main
+  DESTINATION lib/${PROJECT_NAME})
 
 add_executable(server
   src/server.cpp
@@ -70,20 +77,14 @@ add_executable(server
 target_link_libraries(server
   ${Boost_LIBRARIES}
   jsoncpp
+  -lyuv
 )
 
+install(TARGETS
+  server
+  DESTINATION lib/${PROJECT_NAME})
 
-# target_link_libraries(webrtc_stream
-#   ${GST_LIBRARIES}
-#   ${Boost_LIBRARIES}
-#   ${RK_MPP_LIBRARIES}
-#   ${RGA_LIBRARY}
-#   # ${OpenCV_LIBS}
-#   # nlohmann_json::nlohmann_json
-#   jsoncpp
-# )
+ament_package()
 
-# set_target_properties(test PROPERTIES
-#   CXX_STANDARD 14
-#   CXX_STANDARD_REQUIRED ON
-# )
+
+
