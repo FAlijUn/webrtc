@@ -25,8 +25,6 @@ pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
 set(YUV_INCLUDE_DIR "/usr/include")
 set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
 
-
-
 include_directories(
   include
   ${GST_INCLUDE_DIRS}
@@ -36,18 +34,7 @@ include_directories(
   # ${RGA_INCLUDE_DIR}
 )
 
-
 add_executable(main
-  # test/available_devices.cpp
-  # test/save_to_shm.cpp
-  # test/multi_thread_shm.cpp
-  # test/ring_buffer_shm.cpp
-  # test/zero_copy_shm.cpp
-  # test/data_proccess_shm.cpp
-  # test/webrtc_appsrc_shm.cpp
-  # test/gstreamer_appsrc.cpp
-  # test/gstreamer_appsrc_webertc.cpp
-  # test/thread_test.cpp
   src/main.cpp
   # webrtc_stream.cpp
 )
@@ -77,14 +64,41 @@ add_executable(server
 target_link_libraries(server
   ${Boost_LIBRARIES}
   jsoncpp
-  -lyuv
 )
 
 install(TARGETS
   server
   DESTINATION lib/${PROJECT_NAME})
 
-ament_package()
+add_executable(function_test
+  # test/available_devices.cpp
+  # test/save_to_shm.cpp
+  # test/multi_thread_shm.cpp
+  # test/ring_buffer_shm.cpp
+  # test/zero_copy_shm.cpp
+  # test/data_proccess_shm.cpp
+  # test/webrtc_appsrc_shm.cpp
+  # test/gstreamer_appsrc.cpp
+  # test/gstreamer_appsrc_webertc.cpp
+  # test/thread_test.cpp
+  test/single_thread_ros_publish.cpp
+)
 
+ament_target_dependencies(function_test
+  rclcpp
+  sensor_msgs
+)
+
+target_link_libraries(function_test
+  ${RK_MPP_LIBRARIES}
+  ${YUV_LIBRARY}
+  # ${RGA_LIBRARY}
+)
+
+install(TARGETS
+  function_test
+  DESTINATION lib/${PROJECT_NAME})
+
+ament_package()
 
 

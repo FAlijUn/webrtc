@@ -43,7 +43,7 @@ public:
       std::cout << "mpp_init failed, ret = " << ret_ << std::endl;
       return false;
     }
-    MppFrameFormat fmt = MPP_FMT_YUV420SP;
+    MppFrameFormat fmt = MPP_FMT_YUV420SP_VU;
     mpp_param = &fmt;
     ret_ = mpp_api_->control(mpp_ctx_, MPP_DEC_SET_OUTPUT_FORMAT, mpp_param);
     if (ret_ != MPP_OK) {
