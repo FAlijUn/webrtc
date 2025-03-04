@@ -1,59 +1,41 @@
 #include <rclcpp/rclcpp.hpp>
 #include "api.h"
 
-int main(int argc, char** argv) {
+std::shared_ptr<VideoCapture> video_capture_ptr;
+std::shared_ptr<Ros2Publish> ros2_publish_ptr;
+std::shared_ptr<VideoStream> video_stream_ptr;
+
+int main(int argc, char** argv){
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("video_ros_node");
+  std::shared_ptr<ShareData> share_data = std::make_shared<ShareData>(1280, 720, 4);
+  video_capture_ptr = std::make_shared<VideoCapture>(share_data);
+  ros2_publish_ptr = std::make_shared<Ros2Publish>(share_data);
+  video_stream_ptr = std::make_shared<VideoStream>(share_data, "localhost", "8001");
 
-  SharedMemory shm;
-  if(!shm.init()){
-    std::cerr << "Failed to create shared memory" << std::endl;
-    return -1;
-  }
-  
-  
-  VideoCapture video_capture(&shm);
-  
-  std::string host = "localhost";
-  std::string port = "8001";
-  VideoStream video_stream(&shm, host, port);
-  // VideoStreamWeb video_stream_web(&shm);
-  VideoROS video_ros(&shm, node);
-
-  if(!video_capture.init()){
+  if(!video_capture_ptr->init()){
     std::cerr << "Failed to initialize video capture" << std::endl;
     return -1;
   }
-  if(!video_ros.init()){
-    std::cerr << "Failed to initialize video ros" << std::endl;
+  if(!ros2_publish_ptr->init()){
+    std::cerr << "Failed to initialize ros2 publish" << std::endl;
     return -1;
   }
-  
+  if(!video_stream_ptr->init()){
+    std::cerr << "Failed to initialize video stream" << std::endl;
+    return -1;
+  }
 
-  std::thread capture_thread(&VideoCapture::capture_data, &video_capture);
-  // std::thread stream_thread(&VideoStream::main, &video_stream);
-  std::thread ros_thread(&VideoROS::read_data, &video_ros);
-  video_stream.init();
-  
+  video_capture_ptr->start();
+  ros2_publish_ptr->start();
+  video_stream_ptr->start();
 
-  rclcpp::on_shutdown([&](){
-    video_capture.stop();
-    video_stream.stop();
-    video_ros.stop();
-    capture_thread.join();
-    ros_thread.join();
-    shm.cleanup();
-  });
-
-
-  // rclcpp::spin(node);
-  // // video_stream_web.init();
- 
-  // capture_thread.join();
-  // // stream_thread.join();
-  // ros_thread.join();
-
+  auto node = rclcpp::Node::make_shared("node");
   rclcpp::spin(node);
+
+  video_capture_ptr->stop();
+  ros2_publish_ptr->stop();
+  video_stream_ptr->stop();
+
   rclcpp::shutdown();
   return 0;
 }

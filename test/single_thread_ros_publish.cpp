@@ -8,11 +8,11 @@
 #include <cstring>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include "mjpeg2yuv.h"
+#include "utils/mjpeg2yuv.h"
 
-#define WIDTH 640
-#define HEIGHT 480
-#define BUFFER_COUNT 4
+#define WIDTH 1280
+#define HEIGHT 720
+#define BUFFER_COUNT 2
 // #define BUFFER_SIZE WIDTH * HEIGHT * 2
 
 struct buffer{
@@ -40,7 +40,7 @@ int main(int argc, char** argv){
   auto node = rclcpp::Node::make_shared("video_capture_node");
   auto publisher = node->create_publisher<sensor_msgs::msg::Image>("image_raw", 10);
 
-  MjpegToYuvConverter* mjpeg2yuv = new MjpegToYuvConverter();
+  MjpegToYuvConverter* mjpeg2yuv = new MjpegToYuvConverter(u_int32_t(WIDTH),u_int32_t(HEIGHT));
   uint8_t* yuv_data = new uint8_t[WIDTH * HEIGHT * 3];
   if(!mjpeg2yuv->init()){
     std::cerr << "Failed to initialize mjpeg2yuv" << std::endl;

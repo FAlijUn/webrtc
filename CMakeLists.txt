@@ -19,8 +19,8 @@ find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
-# set(RGA_INCLUDE_DIR "/usr/include")
-# set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
+set(RGA_INCLUDE_DIR "/usr/include")
+set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
 
 set(YUV_INCLUDE_DIR "/usr/include")
 set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
@@ -31,7 +31,7 @@ include_directories(
   ${Boost_INCLUDE_DIRS}
   ${RK_MPP_INCLUDE_DIRS}
   ${YUV_INCLUDE_DIR}
-  # ${RGA_INCLUDE_DIR}
+  ${RGA_INCLUDE_DIR}
 )
 
 add_executable(main
@@ -49,7 +49,7 @@ target_link_libraries(main
   ${Boost_LIBRARIES}
   ${RK_MPP_LIBRARIES}
   ${YUV_LIBRARY}
-  # ${RGA_LIBRARY}
+  ${RGA_LIBRARY}
   jsoncpp
 )
 
@@ -92,7 +92,7 @@ ament_target_dependencies(function_test
 target_link_libraries(function_test
   ${RK_MPP_LIBRARIES}
   ${YUV_LIBRARY}
-  # ${RGA_LIBRARY}
+  ${RGA_LIBRARY}
 )
 
 install(TARGETS
