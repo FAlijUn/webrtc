@@ -27,6 +27,7 @@ set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
 
 include_directories(
   include
+  src/interprocess
   ${GST_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${RK_MPP_INCLUDE_DIRS}
@@ -34,17 +35,17 @@ include_directories(
   ${RGA_INCLUDE_DIR}
 )
 
-add_executable(main
-  src/main.cpp
+add_executable(producer
+  src/interprocess/producer.cpp
   # webrtc_stream.cpp
 )
 
-ament_target_dependencies(main
+ament_target_dependencies(producer
   rclcpp
   sensor_msgs
 )
 
-target_link_libraries(main
+target_link_libraries(producer
   ${GST_LIBRARIES}
   ${Boost_LIBRARIES}
   ${RK_MPP_LIBRARIES}
@@ -54,8 +55,35 @@ target_link_libraries(main
 )
 
 install(TARGETS
-  main
+  producer
   DESTINATION lib/${PROJECT_NAME})
+############################################################################################################
+
+add_executable(consumer
+  src/interprocess/consumer.cpp
+  # webrtc_stream.cpp
+)
+
+ament_target_dependencies(consumer
+  rclcpp
+  sensor_msgs
+)
+
+target_link_libraries(consumer
+  ${GST_LIBRARIES}
+  ${Boost_LIBRARIES}
+  ${RK_MPP_LIBRARIES}
+  ${YUV_LIBRARY}
+  ${RGA_LIBRARY}
+  jsoncpp
+)
+
+install(TARGETS
+consumer
+  DESTINATION lib/${PROJECT_NAME})
+
+
+############################################################################################################
 
 add_executable(server
   src/server.cpp
@@ -71,16 +99,6 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME})
 
 add_executable(function_test
-  # test/available_devices.cpp
-  # test/save_to_shm.cpp
-  # test/multi_thread_shm.cpp
-  # test/ring_buffer_shm.cpp
-  # test/zero_copy_shm.cpp
-  # test/data_proccess_shm.cpp
-  # test/webrtc_appsrc_shm.cpp
-  # test/gstreamer_appsrc.cpp
-  # test/gstreamer_appsrc_webertc.cpp
-  # test/thread_test.cpp
   test/single_thread_ros_publish.cpp
 )
 

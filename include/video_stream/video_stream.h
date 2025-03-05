@@ -21,7 +21,7 @@ namespace net = boost::asio;
 using tcp = net::ip::tcp;
 using wsts = beast::websocket::stream<beast::tcp_stream>;
 
-class VideoStream{
+  class VideoStream{
 public:
   VideoStream(std::shared_ptr<ShareData> share_data, const std::string& host, const std::string& port):
   share_data_(share_data), host_(host), port_(port), io_context_(), ws_(io_context_){
