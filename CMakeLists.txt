@@ -18,105 +18,121 @@ find_package(Boost REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
-set(RGA_INCLUDE_DIR "/usr/include")
-set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
+# pkg_search_module(RK_MPP REQUIRED rockchip_mpp)
+# set(RGA_INCLUDE_DIR "/usr/include")
+# set(RGA_LIBRARY "/usr/lib/aarch64-linux-gnu/librga.so")
 
-set(YUV_INCLUDE_DIR "/usr/include")
-set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
+# set(YUV_INCLUDE_DIR "/usr/include")
+# set(YUV_LIBRARY "/usr/lib/aarch64-linux-gnu/libyuv.so")
 
 include_directories(
   include
-  src/interprocess
+  # src/interprocess
   ${GST_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
-  ${RK_MPP_INCLUDE_DIRS}
-  ${YUV_INCLUDE_DIR}
-  ${RGA_INCLUDE_DIR}
+  # ${RK_MPP_INCLUDE_DIRS}
+  # ${YUV_INCLUDE_DIR}
+  # ${RGA_INCLUDE_DIR}
 )
 
-add_executable(producer
-  src/interprocess/producer.cpp
-  # webrtc_stream.cpp
+set(
+  TEST_FILES
+  src/turorials/hello_world.cpp
+  src/turorials/gstreamer_concept.cpp
+  src/turorials/dynamic_pipelines.cpp
 )
 
-ament_target_dependencies(producer
-  rclcpp
-  sensor_msgs
-)
-
-target_link_libraries(producer
-  ${GST_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${RK_MPP_LIBRARIES}
-  ${YUV_LIBRARY}
-  ${RGA_LIBRARY}
-  jsoncpp
-)
-
-install(TARGETS
-  producer
-  DESTINATION lib/${PROJECT_NAME})
-############################################################################################################
-
-add_executable(consumer
-  src/interprocess/consumer.cpp
-  # webrtc_stream.cpp
-)
-
-ament_target_dependencies(consumer
-  rclcpp
-  sensor_msgs
-)
-
-target_link_libraries(consumer
-  ${GST_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${RK_MPP_LIBRARIES}
-  ${YUV_LIBRARY}
-  ${RGA_LIBRARY}
-  jsoncpp
-)
-
-install(TARGETS
-consumer
-  DESTINATION lib/${PROJECT_NAME})
+foreach(file ${TEST_FILES})
+  get_filename_component(file_name ${file} NAME_WE)
+  add_executable(${file_name} ${file} ${SOURCE})
+  target_link_libraries(${file_name} ${Boost_LIBRARIES} ${GST_LIBRARIES} jsoncpp)
+  install(TARGETS ${file_name} DESTINATION lib/${PROJECT_NAME})
+endforeach()
 
 
-############################################################################################################
 
-add_executable(server
-  src/server.cpp
-)
+# add_executable(producer
+#   src/interprocess/producer.cpp
+#   # webrtc_stream.cpp
+# )
 
-target_link_libraries(server
-  ${Boost_LIBRARIES}
-  jsoncpp
-)
+# ament_target_dependencies(producer
+#   rclcpp
+#   sensor_msgs
+# )
 
-install(TARGETS
-  server
-  DESTINATION lib/${PROJECT_NAME})
+# target_link_libraries(producer
+#   ${GST_LIBRARIES}
+#   ${Boost_LIBRARIES}
+#   ${RK_MPP_LIBRARIES}
+#   ${YUV_LIBRARY}
+#   ${RGA_LIBRARY}
+#   jsoncpp
+# )
 
-add_executable(function_test
-  test/single_thread_ros_publish.cpp
-)
+# install(TARGETS
+#   producer
+#   DESTINATION lib/${PROJECT_NAME})
+# ############################################################################################################
 
-ament_target_dependencies(function_test
-  rclcpp
-  sensor_msgs
-)
+# add_executable(consumer
+#   src/interprocess/consumer.cpp
+#   # webrtc_stream.cpp
+# )
 
-target_link_libraries(function_test
-  ${RK_MPP_LIBRARIES}
-  ${YUV_LIBRARY}
-  ${RGA_LIBRARY}
-)
+# ament_target_dependencies(consumer
+#   rclcpp
+#   sensor_msgs
+# )
 
-install(TARGETS
-  function_test
-  DESTINATION lib/${PROJECT_NAME})
+# target_link_libraries(consumer
+#   ${GST_LIBRARIES}
+#   ${Boost_LIBRARIES}
+#   ${RK_MPP_LIBRARIES}
+#   ${YUV_LIBRARY}
+#   ${RGA_LIBRARY}
+#   jsoncpp
+# )
 
-ament_package()
+# install(TARGETS
+# consumer
+#   DESTINATION lib/${PROJECT_NAME})
+
+
+# ############################################################################################################
+
+# add_executable(server
+#   src/server.cpp
+# )
+
+# target_link_libraries(server
+#   ${Boost_LIBRARIES}
+#   jsoncpp
+# )
+
+# install(TARGETS
+#   server
+#   DESTINATION lib/${PROJECT_NAME})
+
+# add_executable(function_test
+#   test/single_thread_ros_publish.cpp
+# )
+
+# ament_target_dependencies(function_test
+#   rclcpp
+#   sensor_msgs
+# )
+
+# target_link_libraries(function_test
+#   ${RK_MPP_LIBRARIES}
+#   ${YUV_LIBRARY}
+#   ${RGA_LIBRARY}
+# )
+
+# install(TARGETS
+#   function_test
+#   DESTINATION lib/${PROJECT_NAME})
+
+# ament_package()
 
 
