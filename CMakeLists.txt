@@ -13,7 +13,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-app-1.0)
+pkg_check_modules(GST REQUIRED gstreamer-1.0 gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-app-1.0 gstreamer-audio-1.0)
 find_package(Boost REQUIRED)
 find_package(jsoncpp REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -40,6 +40,11 @@ set(
   src/turorials/hello_world.cpp
   src/turorials/gstreamer_concept.cpp
   src/turorials/dynamic_pipelines.cpp
+  src/turorials/time_management.cpp
+  # src/turorials/gui.cpp
+  src/turorials/media_formats.cpp
+  src/turorials/multithreading.cpp
+  src/turorials/short_cutting_pipelines.cpp
 )
 
 foreach(file ${TEST_FILES})

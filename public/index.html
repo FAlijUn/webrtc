@@ -4,81 +4,151 @@
   <title>WebRTC Stream</title>
 </head>
 <body>
-  <video id="video" autoplay playsinline muted></video>
+  <div id="videosContainer"></div>
   <script>
-    const video = document.getElementById('video');
     const signaling = new WebSocket('ws://129.68.11.4:8000');
-    let pc = new RTCPeerConnection({
-      iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
-    });
+    let pc;
+    let isOfferSent = false; // 新增：防止重复发送offer
 
-      signaling.onopen = () => {
-        console.log('WebSocket connected');
-        start();  // 确保 WebSocket 连接后才开始发送 offer
-      };
-
-    signaling.onmessage = async (event) => {
-      const data = JSON.parse(event.data);
-      console.log('Received signaling message:', data);
-
-      if (data.type === 'answer') {
-        console.log('Setting remote description with answer');
-        await pc.setRemoteDescription(new RTCSessionDescription(data));
-      } else if (data.type === 'candidate') {
-        console.log('Adding ICE candidate:', data.ice);
-        await pc.addIceCandidate(new RTCIceCandidate(data.ice));
-      }
+    // 将start函数移动到WebSocket open事件中
+    signaling.onopen = () => {
+      console.log('WebSocket connected');
+      initializePeerConnection();
     };
 
-    pc.onicecandidate = (event) => {
+    // 封装PeerConnection初始化逻辑
+    function initializePeerConnection() {
+      pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      // 统一管理事件监听
+      pc.onicecandidate = handleICECandidate;
+      pc.ontrack = handleTrackEvent;
+      pc.oniceconnectionstatechange = logICEState;
+      pc.onsignalingstatechange = logSignalingState;
+
+      startNegotiation(); // 开始信令协商
+    }
+
+    // 处理ICE候选
+    function handleICECandidate(event) {
       if (event.candidate) {
-        console.log('Sending ICE candidate:', event.candidate);
         signaling.send(JSON.stringify({
           type: 'candidate',
           ice: event.candidate
         }));
       }
-    };
+    }
 
-    pc.ontrack = (event) => {
+    // 核心修改点：优化track处理逻辑
+    function handleTrackEvent(event) {
       console.log('Received track:', event);
-      console.log('Stream length:', event.streams.length);
-      if (event.track.kind === 'video') {
-        console.log('Attaching video track to video element');
-        console.log('Streams:', event.streams);
-        video.srcObject = event.streams[0];
-        video.play().catch(error => {
-          console.error('Error playing video:', error);
-        });
+      if (event.track.kind !== 'video') return;
+
+      event.streams.forEach((stream, index) => {
+        const streamId = `video_${event.track.id}`;
+        const video = getOrCreateVideoElement(streamId);
+        
+        // 仅在流变化时更新
+        if (video.srcObject !== stream) {
+          video.srcObject = stream;
+          // 等待元数据加载完成
+          video.onloadedmetadata = () => {
+            safePlayVideo(video);
+          };
+        } else {
+          safePlayVideo(video);
+        }
+      });
+    }
+
+    // 创建/获取video元素的工具函数
+    function getOrCreateVideoElement(streamId) {
+      const container = document.getElementById('videosContainer');
+      let video = document.getElementById(`video_${streamId}`);
+      
+      if (!video) {
+        video = document.createElement('video');
+        video.id = `video_${streamId}`;
+        video.autoplay = true;  // 保持自动播放
+        video.playsinline = true;
+        video.muted = true;
+        video.style.width = '30%';  // 让两个视频并排显示
+        video.style.margin = '5px';
+        video.style.display = 'inline-block';
+        container.appendChild(video);
       }
-    };
+      return video;
+    }
 
-    pc.oniceconnectionstatechange = () => {
-      console.log('ICE connection state:', pc.iceConnectionState);
-    };
-
-    pc.onicegatheringstatechange = () => {
-      console.log('ICE gathering state:', pc.iceGatheringState);
-    };
-
-    pc.onsignalingstatechange = () => {
-      console.log('Signaling state:', pc.signalingState);
-    };
-
-    async function start() {
-      pc.addTransceiver('video', {direction: 'recvonly'});
-      const offer = await pc.createOffer();
-      console.log('Created offer:', offer);
-      await pc.setLocalDescription(offer);
-      console.log('Set local description with offer');
-      if (signaling.readyState === WebSocket.OPEN) {
-        signaling.send(JSON.stringify({ type: 'offer', sdp: pc.localDescription.sdp }));
-      } else {
-        console.log('WebSocket is not open yet');
+    // 安全播放视频（带错误处理）
+    function safePlayVideo(video) {
+      if (video.paused) {
+        video.play()
+          .catch(err => {
+            // 忽略AbortError（代码1）
+            if (err.name !== 'AbortError') {
+              console.error('播放错误:', err);
+            }
+          });
       }
     }
 
-    start();
+    // 信令协商
+    async function startNegotiation() {
+      try {
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        
+        // 防重发机制（代码2）
+        if (!isOfferSent && signaling.readyState === WebSocket.OPEN) {
+          signaling.send(JSON.stringify({ 
+            type: 'offer', 
+            sdp: pc.localDescription.sdp 
+          }));
+          isOfferSent = true;
+        }
+      } catch (err) {
+        console.error('协商失败:', err);
+      }
+    }
+
+    // 其他辅助函数
+    function logICEState() {
+      console.log('ICE connection state:', pc.iceConnectionState);
+    }
+
+    function logSignalingState() {
+      console.log('Signaling state:', pc.signalingState);
+    }
+
+    // 消息处理
+    signaling.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      if (!pc) return;
+
+      try {
+        if (data.type === 'answer') {
+          await pc.setRemoteDescription(new RTCSessionDescription(data));
+        } else if (data.type === 'candidate') {
+          await pc.addIceCandidate(new RTCIceCandidate(data.ice));
+        }
+      } catch (err) {
+        console.error('信令处理错误:', err);
+      }
+    };
+
+    // 初始化时清理旧连接（代码3）
+    window.addEventListener('beforeunload', () => {
+      if (pc) {
+        pc.close();
+        pc = null;
+      }
+      signaling.close();
+    });
   </script>
 </body>
 </html>
